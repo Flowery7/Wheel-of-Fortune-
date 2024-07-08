@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆🎉 Wheel of Fortune 🎉🏆</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #2e3a59;
+            font-family: 'Trebuchet MS', sans-serif;
+            color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background: radial-gradient(circle, rgba(46,58,89,1) 0%, rgba(40,47,80,1) 100%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            color: #ffd700;
+            position: relative;
+            display: inline-block;
+        }
+        .word {
+            display: inline-block;
+            overflow: hidden;
+            animation: pop 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite both;
+            animation-delay: calc(0.1s * var(--index));
+        }
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .input-container {
+            margin-top: 20px;
+        }
+        .input-container input {
+            padding: 10px;
+            margin-right: 10px;
+            font-size: 16px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+        }
+        .add-btn, .spin-btn, .reset-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .add-btn:hover, .spin-btn:hover, .reset-btn:hover {
+            background-color: #45a049;
+        }
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 50%;
+            overflow: hidden;
+            background: radial-gradient(circle, #ffb03b, #ff3b3b);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .segment {
+            stroke-width: 2;
+        }
+        .segment-text {
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+            fill: #333;
+        }
+        .triangle {
+            position: absolute;
+            left: 47%;
+            top: calc(24% - 15px);
+            width: 0;
+            height: 0;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            border-left: 30px solid #fff;
+            transform: rotate(90deg);
+            z-index: 1000;
+        }
+        .banner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background-color: #4CAF50;
+            color: #fff;
+            font-size: 3em;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span class="word" style="--index: 1;">🎉Wheel</span>
+            <span class="word" style="--index: 2;">of</span>
+            <span class="word" style="--index: 3;">Fortune🎉</span>
+        </h1>
+        <div class="wheel-container">
+            <svg class="wheel" viewBox="-150 -150 300 300" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="0" cy="0" r="140" fill="#fff" stroke="#000" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="triangle"></div>
+        <button class="spin-btn" onclick="spin()">Spin</button>
+        <button class="reset-btn" onclick="resetGame()">Reset</button>
+        <div class="input-container">
+            <input type="text" id="nameInput" placeholder="Enter name">
+            <button class="add-btn" onclick="addName()">Add Name</button>
+        </div>
+    </div>
+
+    <div class="banner" id="winnerBanner">🎉 Winner 🎉</div>
+
+    <script>
+        let names = [];
+        let currentRotation = 0;
+        const wheel = document.querySelector('.wheel');
+        const banner = document.getElementById('winnerBanner');
+
+        function addName() {
+            const nameInput = document.getElementById('nameInput');
+            const name = nameInput.value.trim();
+            if (name === '') return;
+
+            names.push({ name: name, color: getRandomLightColor() });
+            nameInput.value = '';
+
+            updateWheel();
+        }
+
+        function updateWheel() {
+            const numSegments = names.length;
+            const angle = 360 / numSegments;
+
+            while (wheel.firstChild) {
+                wheel.removeChild(wheel.firstChild);
+            }
+
+            for (let i = 0; i < numSegments; i++) {
+                const { name, color } = names[i];
+                const startAngle = i * angle;
+                const endAngle = (i + 1) * angle;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute('class', 'segment');
+                path.setAttribute('d', describeArc(0, 0, 140, startAngle, endAngle));
+                path.setAttribute('fill', color);
+                path.setAttribute('stroke', '#000');
+                wheel.appendChild(path);
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                const textAngle = startAngle + (angle / 2);
+                const textX = 100 * Math.cos((textAngle - 90) * Math.PI / 180);
+                const textY = 100 * Math.sin((textAngle - 90) * Math.PI / 180);
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.setAttribute('class', 'segment-text');
+                text.setAttribute('transform', `rotate(${textAngle}, ${textX}, ${textY})`);
+                text.textContent = name;
+                wheel.appendChild(text);
+            }
+        }
+
+        function spin() {
+            if (names.length === 0) {
+                alert('Please add at least one name before spinning.');
+                return;
+            }
+
+            const rotation = Math.floor(Math.random() * 360 + 7200);
+            currentRotation += rotation; // Increment to add new rotation to the previous one
+
+            // Reset the transition before applying it
+            wheel.style.transition = 'none';
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            wheel.getBoundingClientRect(); // Trigger a reflow to flush the CSS changes
+
+            // Set the transition back for smooth animation
+            setTimeout(() => {
+                wheel.style.transition = 'transform 6s cubic-bezier(0.33, 1, 0.68, 1)';
+                wheel.style.transform = `rotate(${currentRotation + rotation}deg)`; // Add the new rotation
+            }, 10); // Small timeout to ensure transition is reapplied correctly
+
+            setTimeout(showWinnerBanner, 6000); // Display banner after spinning
+        }
+
+        function resetGame() {
+            names = [];
+            currentRotation = 0;
+            document.getElementById('nameInput').value = '';
+            updateWheel();
+            banner.style.display = 'none'; // Hide the banner when resetting
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)'; // Reset the wheel's rotation
+        }
+
+        function getRandomLightColor() {
+            const hue = Math.floor(Math.random() * 360);
+            const lightness = Math.floor(Math.random() * 31 + 70);
+            return `hsl(${hue}, 100%, ${lightness}%)`;
+        }
+
+        function describeArc(x, y, radius, startAngle, endAngle) {
+            const startRadians = (startAngle - 90) * Math.PI / 180;
+            const endRadians = (endAngle - 90) * Math.PI / 180;
+            const x1 = x + radius * Math.cos(startRadians);
+            const y1 = y + radius * Math.sin(startRadians);
+            const x2 = x + radius * Math.cos(endRadians);
+            const y2 = y + radius * Math.sin(endRadians);
+            const arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
+            const pathData = [
+                `M 0 0`,
+                `L ${x1} ${y1}`,
+                `A ${radius} ${radius} 0 ${arcSweep} 1 ${x2} ${y2}`,
+                `Z`
+            ].join(' ');
+            return pathData;
+        }
+
+        function showWinnerBanner() {
+            banner.style.display = 'block';
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 3000); // Banner is shown for 3 seconds
+        }
+    </script>
+</body>
+</html>
